@@ -25,23 +25,19 @@ A responsive web application built with Next.js that displays real-time cryptocu
 - **API**: CoinGecko API
 - **Styling**: CSS Modules
 - **Documentation**: Docusaurus
+## 🛠 Tech Stack  
+- **Frontend**: Next.js, React  
+- **State Management**: React Query  
+- **Styling**: CSS Modules  
+- **API**: CoinGecko Public API  
+- **Documentation**: Docusaurus  
 
-## Project Structure
-crypto-price-tracker/
-├── web-app/               # Next.js application
-│   ├── components/        # React components
-│   │   ├── CryptoCard.js  # Individual coin display
-│   │   ├── SearchBar.js   # Search functionality
-│   │   └── RefreshButton.js # Manual refresh control
-│   ├── pages/             # Application routes
-│   │   └── index.js       # Main dashboard page
-│   ├── public/            # Static assets
-│   ├── styles/            # CSS modules
-│   ├── utils/             # Helper functions
-│   │   └── fetchCryptoPrices.js # API handler
-│   └── package.json       # Frontend dependencies
-├── docs/                  # Documentation site
-│   ├── docs/              # Markdown files
-│   └── package.json       # Docs dependencies
-├── .gitignore             # Git exclusion rules
-└── README.md              # Project documentation
+##  Installation  
+1. Clone the repo:  
+`git clone https://github.com/CamerenGreen/Crypto-Price-Tracker.git`  
+2. Install dependencies:  
+```bash
+cd web-app
+npm install
+cd ../docs
+npm install
