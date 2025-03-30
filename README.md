@@ -27,3 +27,21 @@ A responsive web application built with Next.js that displays real-time cryptocu
 - **Documentation**: Docusaurus
 
 ## Project Structure
+crypto-price-tracker/
+├── web-app/               # Next.js application
+│   ├── components/        # React components
+│   │   ├── CryptoCard.js  # Individual coin display
+│   │   ├── SearchBar.js   # Search functionality
+│   │   └── RefreshButton.js # Manual refresh control
+│   ├── pages/             # Application routes
+│   │   └── index.js       # Main dashboard page
+│   ├── public/            # Static assets
+│   ├── styles/            # CSS modules
+│   ├── utils/             # Helper functions
+│   │   └── fetchCryptoPrices.js # API handler
+│   └── package.json       # Frontend dependencies
+├── docs/                  # Documentation site
+│   ├── docs/              # Markdown files
+│   └── package.json       # Docs dependencies
+├── .gitignore             # Git exclusion rules
+└── README.md              # Project documentation
