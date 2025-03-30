@@ -25,7 +25,7 @@ A responsive web application built with Next.js that displays real-time cryptocu
 - **API**: CoinGecko API
 - **Styling**: CSS Modules
 - **Documentation**: Docusaurus
-## 🛠 Tech Stack  
+## Tech Stack  
 - **Frontend**: Next.js, React  
 - **State Management**: React Query  
 - **Styling**: CSS Modules  
