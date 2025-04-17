@@ -37,7 +37,3 @@ A responsive web application built with Next.js that displays real-time cryptocu
 `git clone https://github.com/CamerenGreen/Crypto-Price-Tracker.git`  
 2. Install dependencies:  
 ```bash
-cd web-app
-npm install
-cd ../docs
-npm install
