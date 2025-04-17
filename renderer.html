@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Live Crypto Tracker App</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <h1 class="app-title">BlockPulse</h1>
+      <div class="select-container">
+        <select id="crypto-selector">
+          <option value="bitcoin">Bitcoin (BTC)</option>
+          <option value="ethereum">Ethereum (ETH)</option>
+          <option value="cardano">Cardano (ADA)</option>
+          <option value="solana">Solana (SOL)</option>
+          <option value="ripple">XRP (XRP)</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="price-display">
+        <span id="current-price" class="current-price">$--.--</span>
+        <span id="price-change" class="price-change">+0.00%</span>
+      </div>
+
+      <div class="timeframe-tabs">
+        <button class="timeframe-tab" data-timeframe="1">Live</button>
+        <button class="timeframe-tab" data-timeframe="24">1D</button>
+        <button class="timeframe-tab" data-timeframe="168">1W</button>
+        <button class="timeframe-tab active" data-timeframe="720">1M</button>
+        <button class="timeframe-tab" data-timeframe="2160">3M</button>
+        <button class="timeframe-tab" data-timeframe="ytd">YTD</button>
+        <button class="timeframe-tab" data-timeframe="8760">1Y</button>
+        <button class="timeframe-tab" data-timeframe="max">All</button>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="price-chart"></canvas>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

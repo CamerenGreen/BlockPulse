@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --secondary: #f43f5e;
+  --dark: #1e293b;
+  --light: #f8fafc;
+  --gray: #94a3b8;
+  --success: #10b981;
+  --danger: #ef4444;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0f172a;
+  color: var(--light);
+  min-height: 100vh;
+}
+
+.app-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.app-title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.select-container {
+  position: relative;
+}
+
+select {
+  appearance: none;
+  background-color: var(--dark);
+  color: var(--light);
+  border: 1px solid var(--gray);
+  border-radius: 0.5rem;
+  padding: 0.75rem 2rem 0.75rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.timeframe-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.timeframe-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--dark);
+  border: none;
+  color: var(--light);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.timeframe-tab:hover {
+  background-color: #334155;
+}
+
+.timeframe-tab.active {
+  background-color: var(--primary);
+  color: white;
+}
+
+.chart-container {
+  background-color: var(--dark);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 500px;
+}
+
+.price-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.current-price {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.price-change {
+  font-size: 1rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.positive {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.negative {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
