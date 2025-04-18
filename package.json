@@ -1,18 +1,40 @@
 {
-  "name": "modern-crypto-tracker",
-  "version": "2.0.0",
-  "main": "main.js",
+  "name": "crypto-price-tracker",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "axios": "^1.6.7",
-    "electron": "^28.0.0",
-    "chart.js": "^4.4.0",
-    "fontsource-inter": "^4.5.14"
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "electron-builder": "^24.9.1"
-  }
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "electron": "^35.1.5",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "description": "A real-time cryptocurrency monitoring application built with Next.js that displays live market data with search and refresh functionality.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//CamerenGreen/Crypto-Price-Tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
