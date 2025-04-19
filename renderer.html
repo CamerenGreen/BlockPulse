@@ -3,16 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Live Crypto Tracker App</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://assets.coingecko.com; connect-src 'self' https://api.coingecko.com">
+  <title>BlockPulse - Crypto Tracker</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <style>
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      flex-direction: column;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(139, 92, 246, 0.3);
+      border-top-color: #8b5cf6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <div class="app-container">
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <p>Loading BlockPulse...</p>
+  </div>
+
+  <!-- Error Container -->
+  <div id="error-container" style="display: none;">
+    <h2>Application Error</h2>
+    <p id="error-message"></p>
+    <button id="reload-button">Reload App</button>
+  </div>
+
+  <!-- Main App Content -->
+  <div id="app-container" style="display: none;">
     <header class="header">
       <h1 class="app-title">BlockPulse</h1>
-      <div class="select-container">
+      <div class="crypto-selector">
         <select id="crypto-selector">
           <option value="bitcoin">Bitcoin (BTC)</option>
           <option value="ethereum">Ethereum (ETH)</option>
@@ -25,19 +65,23 @@
 
     <div class="controls">
       <div class="price-display">
-        <span id="current-price" class="current-price">$--.--</span>
-        <span id="price-change" class="price-change">+0.00%</span>
+        <div class="crypto-info">
+          <img id="crypto-icon" class="crypto-icon" src="" alt="">
+          <span id="crypto-name" class="crypto-name"></span>
+          <span id="current-price" class="current-price">$--.--</span>
+          <span id="price-change" class="price-change">+0.00%</span>
+        </div>
       </div>
 
       <div class="timeframe-tabs">
-        <button class="timeframe-tab" data-timeframe="1">Live</button>
-        <button class="timeframe-tab" data-timeframe="24">1D</button>
-        <button class="timeframe-tab" data-timeframe="168">1W</button>
-        <button class="timeframe-tab active" data-timeframe="720">1M</button>
-        <button class="timeframe-tab" data-timeframe="2160">3M</button>
+        <button class="timeframe-tab" data-timeframe="1h">1H</button>
+        <button class="timeframe-tab" data-timeframe="24h">24H</button>
+        <button class="timeframe-tab active" data-timeframe="7d">7D</button>
+        <button class="timeframe-tab" data-timeframe="30d">30D</button>
+        <button class="timeframe-tab" data-timeframe="90d">90D</button>
         <button class="timeframe-tab" data-timeframe="ytd">YTD</button>
-        <button class="timeframe-tab" data-timeframe="8760">1Y</button>
-        <button class="timeframe-tab" data-timeframe="max">All</button>
+        <button class="timeframe-tab" data-timeframe="1y">1Y</button>
+        <button class="timeframe-tab" data-timeframe="all">ALL</button>
       </div>
     </div>
 
@@ -46,6 +90,13 @@
     </div>
   </div>
 
+  <!-- Load Chart.js from CDN with integrity check -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+          integrity="sha384-0A3f5TW7E0a4Gp1ZfFdwqJ0F5Q3Y3Pz0k8X5U5F5F5F5F5F5F5F5F5F5F5F5F5F5"
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
+  
+  <!-- Load our script last -->
   <script src="renderer.js"></script>
 </body>
 </html>

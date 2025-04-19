@@ -1,59 +1,111 @@
-const { contextBridge } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
+contextBridge.exposeInMainWorld('electronAPI', {
+  fetchCryptoData: (cryptoId, timeframe) => {
+    return ipcRenderer.invoke('fetch-crypto-data', { cryptoId, timeframe });
+  }
+});
 const axios = require('axios');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   fetchCryptoData: async (cryptoId, timeframe) => {
     try {
-      // Fetch current price
-      const currentResponse = await axios.get(
-        `https://api.coingecko.com/api/v3/coins/${cryptoId}`
-      );
-      const currentData = currentResponse.data;
-      
-      // Fetch historical data based on timeframe
-      let days, interval;
-      if (timeframe === '1') {
-        // Live data (last 24 hours)
-        const response = await axios.get(
-          `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart`,
-          { params: { vs_currency: 'usd', days: 1 } }
-        );
-        return {
-          currentPrice: currentData.market_data.current_price.usd,
-          priceChange: currentData.market_data.price_change_percentage_24h,
-          historicalData: response.data.prices
-        };
-      } else if (timeframe === 'ytd') {
-        // Year to date
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), 0, 1);
-        const diffTime = Math.abs(today - firstDay);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        days = diffDays;
-        interval = 'daily';
-      } else if (timeframe === 'max') {
-        // All time
-        days = 'max';
-        interval = 'daily';
-      } else {
-        // Convert hours to days
-        days = Math.ceil(parseInt(timeframe) / 24);
-        interval = timeframe <= 720 ? 'hourly' : 'daily';
+      // Validate input
+      if (!cryptoId || !timeframe) {
+        throw new Error('Missing required parameters');
       }
-      
-      const response = await axios.get(
-        `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart`,
-        { params: { vs_currency: 'usd', days } }
+
+      // Fetch current price data
+      const currentResponse = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/${cryptoId}`,
+        { 
+          timeout: 5000,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
       );
       
+      if (!currentResponse.data?.market_data?.current_price?.usd) {
+        throw new Error('Invalid API response structure');
+      }
+
+      const currentData = currentResponse.data;
+      const timeParams = getTimeParameters(timeframe);
+      
+      // Calculate time range (convert to seconds)
+      const now = Math.floor(Date.now() / 1000);
+      const fromTime = now - (timeParams.days * 24 * 60 * 60);
+      
+      // Fetch historical data
+      const historicalResponse = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range`,
+        {
+          params: {
+            vs_currency: 'usd',
+            from: fromTime,
+            to: now
+          },
+          timeout: 10000,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!historicalResponse.data?.prices?.length) {
+        throw new Error('No historical price data received');
+      }
+
+      // Format data for chart
+      const historicalData = historicalResponse.data.prices.map(item => ({
+        timestamp: item[0],
+        price: item[1]
+      }));
+
       return {
+        id: cryptoId,
+        name: currentData.name,
+        symbol: currentData.symbol.toUpperCase(),
         currentPrice: currentData.market_data.current_price.usd,
-        priceChange: currentData.market_data[`price_change_percentage_${interval}_in_currency`].usd,
-        historicalData: response.data.prices
+        priceChange: getPriceChange(currentData, timeParams.interval),
+        image: currentData.image?.small || '',
+        historicalData,
+        timeframe
       };
+
     } catch (error) {
-      console.error('API Error:', error);
-      throw error;
+      console.error(`API Error for ${cryptoId}:`, error);
+      throw new Error(`Failed to fetch ${cryptoId} data: ${error.message}`);
     }
   }
 });
+
+function getTimeParameters(timeframe) {
+  const params = {
+    '1h': { days: 1, interval: 'hourly' },
+    '24h': { days: 1, interval: 'hourly' },
+    '7d': { days: 7, interval: 'daily' },
+    '30d': { days: 30, interval: 'daily' },
+    '90d': { days: 90, interval: 'daily' },
+    'ytd': { 
+      days: Math.ceil((Date.now() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (1000 * 60 * 60 * 24)),
+      interval: 'daily' 
+    },
+    '1y': { days: 365, interval: 'daily' },
+    'all': { days: 365 * 5, interval: 'daily' }
+  };
+
+  return params[timeframe] || params['24h'];
+}
+
+function getPriceChange(data, interval) {
+  try {
+    const changeKey = `price_change_percentage_${interval}_in_currency`;
+    return data.market_data[changeKey]?.usd || 
+           data.market_data.price_change_percentage_24h_in_currency?.usd || 0;
+  } catch {
+    return 0;
+  }
+}
