@@ -5,7 +5,13 @@ const appState = {
   currentCrypto: 'bitcoin',
   currentTimeframe: '7d',
   currentView: 'single', // 'single' or 'dashboard'
-  dashboardCryptos: ['bitcoin', 'ethereum', 'cardano', 'solana', 'ripple', 'litecoin', 'chainlink', 'polkadot'],
+  dashboardCryptos: [
+    'bitcoin', 'ethereum', 'cardano', 'solana', 'ripple', 
+    'litecoin', 'chainlink', 'polkadot', 'avalanche-2', 
+    'polygon', 'uniswap', 'dogecoin'
+  ],
+  autoRefreshInterval: null,
+  refreshIntervalMs: 30000, // 30 seconds
   domElements: {}
 };
 
@@ -375,6 +381,12 @@ function switchView(view) {
 
   appState.currentView = view;
 
+  // Clear any existing auto-refresh
+  if (appState.autoRefreshInterval) {
+    clearInterval(appState.autoRefreshInterval);
+    appState.autoRefreshInterval = null;
+  }
+
   // Update button states
   if (view === 'single') {
     appState.domElements.singleViewBtn.classList.add('active');
@@ -387,12 +399,19 @@ function switchView(view) {
     appState.domElements.singleView.style.display = 'none';
     appState.domElements.dashboardView.style.display = 'block';
     loadDashboardData();
+    
+    // Set up auto-refresh for dashboard
+    appState.autoRefreshInterval = setInterval(() => {
+      loadDashboardData(true); // Silent refresh
+    }, appState.refreshIntervalMs);
   }
 }
 
 // Dashboard Functions
-async function loadDashboardData() {
-  showLoadingOverlay();
+async function loadDashboardData(silent = false) {
+  if (!silent) {
+    showLoadingOverlay();
+  }
   
   try {
     if (!window.electronAPI || !window.electronAPI.fetchMultipleCryptos) {
@@ -406,12 +425,20 @@ async function loadDashboardData() {
     }
 
     renderDashboard(cryptosData);
+    
+    if (!silent) {
+      console.log('Dashboard refreshed with', cryptosData.length, 'cryptocurrencies');
+    }
 
   } catch (error) {
     console.error('Dashboard loading failed:', error);
-    showError(`Failed to load dashboard: ${error.message}`);
+    if (!silent) {
+      showError(`Failed to load dashboard: ${error.message}`);
+    }
   } finally {
-    hideLoadingOverlay();
+    if (!silent) {
+      hideLoadingOverlay();
+    }
   }
 }
 
@@ -478,6 +505,22 @@ function formatLargeNumber(num) {
     return num.toLocaleString();
   }
 }
+
+// Cleanup function for when the app is closed
+function cleanup() {
+  if (appState.autoRefreshInterval) {
+    clearInterval(appState.autoRefreshInterval);
+    appState.autoRefreshInterval = null;
+  }
+  
+  if (appState.currentChart) {
+    appState.currentChart.destroy();
+    appState.currentChart = null;
+  }
+}
+
+// Add cleanup on beforeunload
+window.addEventListener('beforeunload', cleanup);
 
 // Start the application
 document.addEventListener('DOMContentLoaded', initializeApplication);

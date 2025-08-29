@@ -80,6 +80,10 @@ ipcMain.handle('fetch-multiple-cryptos', async (event, { cryptoIds }) => {
       throw new Error('Invalid crypto IDs provided');
     }
 
+    // Add delay to respect rate limits
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    await delay(100);
+
     // Fetch current prices for multiple cryptocurrencies
     const response = await axios.get(
       'https://api.coingecko.com/api/v3/coins/markets',
@@ -93,7 +97,11 @@ ipcMain.handle('fetch-multiple-cryptos', async (event, { cryptoIds }) => {
           sparkline: false,
           price_change_percentage: '24h,7d'
         },
-        timeout: 10000
+        timeout: 15000,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'BlockPulse/2.0.0'
+        }
       }
     );
 
@@ -111,12 +119,23 @@ ipcMain.handle('fetch-multiple-cryptos', async (event, { cryptoIds }) => {
       image: coin.image,
       marketCap: coin.market_cap,
       marketCapRank: coin.market_cap_rank,
-      totalVolume: coin.total_volume
+      totalVolume: coin.total_volume,
+      lastUpdated: new Date().toISOString()
     }));
 
   } catch (error) {
     console.error('API Error for multiple cryptos:', error);
-    throw new Error(`Failed to fetch multiple crypto data: ${error.message}`);
+    
+    // Provide more specific error messages
+    if (error.code === 'ENOTFOUND') {
+      throw new Error('Network error: Unable to connect to CoinGecko API');
+    } else if (error.response?.status === 429) {
+      throw new Error('Rate limit exceeded. Please try again later.');
+    } else if (error.response?.status >= 500) {
+      throw new Error('CoinGecko API is temporarily unavailable');
+    } else {
+      throw new Error(`Failed to fetch multiple crypto data: ${error.message}`);
+    }
   }
 });
 
