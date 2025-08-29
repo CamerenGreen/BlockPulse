@@ -19,7 +19,7 @@ function createWindow() {
   mainWindow.loadFile('renderer.html');
 }
 
-// API call handler
+// API call handler for single crypto
 ipcMain.handle('fetch-crypto-data', async (event, { cryptoId, timeframe }) => {
   try {
     const currentResponse = await axios.get(
@@ -60,13 +60,63 @@ ipcMain.handle('fetch-crypto-data', async (event, { cryptoId, timeframe }) => {
       currentPrice: currentData.market_data.current_price.usd,
       priceChange: getPriceChange(currentData, timeParams.interval),
       image: currentData.image?.small || '',
-      historicalData: historicalResponse.data.prices,
+      historicalData: historicalResponse.data.prices.map(item => ({
+        timestamp: item[0],
+        price: item[1]
+      })),
       timeframe
     };
 
   } catch (error) {
     console.error(`API Error for ${cryptoId}:`, error);
     throw new Error(`Failed to fetch ${cryptoId} data: ${error.message}`);
+  }
+});
+
+// API call handler for multiple cryptos
+ipcMain.handle('fetch-multiple-cryptos', async (event, { cryptoIds }) => {
+  try {
+    if (!cryptoIds || !Array.isArray(cryptoIds) || cryptoIds.length === 0) {
+      throw new Error('Invalid crypto IDs provided');
+    }
+
+    // Fetch current prices for multiple cryptocurrencies
+    const response = await axios.get(
+      'https://api.coingecko.com/api/v3/coins/markets',
+      {
+        params: {
+          vs_currency: 'usd',
+          ids: cryptoIds.join(','),
+          order: 'market_cap_desc',
+          per_page: cryptoIds.length,
+          page: 1,
+          sparkline: false,
+          price_change_percentage: '24h,7d'
+        },
+        timeout: 10000
+      }
+    );
+
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error('Invalid API response structure');
+    }
+
+    return response.data.map(coin => ({
+      id: coin.id,
+      name: coin.name,
+      symbol: coin.symbol.toUpperCase(),
+      currentPrice: coin.current_price,
+      priceChange: coin.price_change_percentage_24h || 0,
+      priceChange7d: coin.price_change_percentage_7d_in_currency || 0,
+      image: coin.image,
+      marketCap: coin.market_cap,
+      marketCapRank: coin.market_cap_rank,
+      totalVolume: coin.total_volume
+    }));
+
+  } catch (error) {
+    console.error('API Error for multiple cryptos:', error);
+    throw new Error(`Failed to fetch multiple crypto data: ${error.message}`);
   }
 });
 
