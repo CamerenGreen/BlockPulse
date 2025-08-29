@@ -4,6 +4,14 @@ const appState = {
   currentChart: null,
   currentCrypto: 'bitcoin',
   currentTimeframe: '7d',
+  currentView: 'single', // 'single' or 'dashboard'
+  dashboardCryptos: [
+    'bitcoin', 'ethereum', 'cardano', 'solana', 'ripple', 
+    'litecoin', 'chainlink', 'polkadot', 'avalanche-2', 
+    'polygon', 'uniswap', 'dogecoin'
+  ],
+  autoRefreshInterval: null,
+  refreshIntervalMs: 30000, // 30 seconds
   domElements: {}
 };
 
@@ -40,7 +48,13 @@ function initializeDOMElements() {
     priceChange: document.getElementById('price-change'),
     chartCanvas: document.getElementById('price-chart'),
     timeframeTabs: document.querySelectorAll('.timeframe-tab'),
-    chartContainer: document.querySelector('.chart-container')
+    chartContainer: document.querySelector('.chart-container'),
+    singleViewBtn: document.getElementById('single-view-btn'),
+    dashboardViewBtn: document.getElementById('dashboard-view-btn'),
+    singleView: document.getElementById('single-view'),
+    dashboardView: document.getElementById('dashboard-view'),
+    cryptoGrid: document.getElementById('crypto-grid'),
+    refreshDashboard: document.getElementById('refresh-dashboard')
   };
 }
 
@@ -48,7 +62,7 @@ function initializeDOMElements() {
 function verifyCriticalElements() {
   const requiredElements = [
     'loadingOverlay', 'appContainer', 'chartCanvas',
-    'cryptoSelector', 'errorContainer'
+    'cryptoSelector', 'errorContainer', 'singleViewBtn', 'dashboardViewBtn'
   ];
 
   const missingElements = requiredElements.filter(
@@ -85,6 +99,22 @@ function setupEventListeners() {
 
   // Window Resize
   window.addEventListener('resize', handleWindowResize);
+
+  // View Toggle Buttons
+  appState.domElements.singleViewBtn.addEventListener('click', () => {
+    switchView('single');
+  });
+
+  appState.domElements.dashboardViewBtn.addEventListener('click', () => {
+    switchView('dashboard');
+  });
+
+  // Dashboard Refresh
+  appState.domElements.refreshDashboard.addEventListener('click', async () => {
+    if (appState.currentView === 'dashboard') {
+      await loadDashboardData();
+    }
+  });
 }
 
 // Data Loading and Rendering
@@ -285,6 +315,14 @@ function destroyChart() {
   }
 }
 
+function createChartGradient(canvas) {
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
+  gradient.addColorStop(1, 'rgba(139, 92, 246, 0.05)');
+  return gradient;
+}
+
 function updateCryptoInfoUI(data) {
   if (!appState.domElements.cryptoIcon || !appState.domElements.cryptoName || 
       !appState.domElements.currentPrice || !appState.domElements.priceChange) {
@@ -336,6 +374,153 @@ function handleCriticalError(message) {
   hideLoadingOverlay();
   showError(message);
 }
+
+// View Management Functions
+function switchView(view) {
+  if (view === appState.currentView) return;
+
+  appState.currentView = view;
+
+  // Clear any existing auto-refresh
+  if (appState.autoRefreshInterval) {
+    clearInterval(appState.autoRefreshInterval);
+    appState.autoRefreshInterval = null;
+  }
+
+  // Update button states
+  if (view === 'single') {
+    appState.domElements.singleViewBtn.classList.add('active');
+    appState.domElements.dashboardViewBtn.classList.remove('active');
+    appState.domElements.singleView.style.display = 'block';
+    appState.domElements.dashboardView.style.display = 'none';
+  } else {
+    appState.domElements.singleViewBtn.classList.remove('active');
+    appState.domElements.dashboardViewBtn.classList.add('active');
+    appState.domElements.singleView.style.display = 'none';
+    appState.domElements.dashboardView.style.display = 'block';
+    loadDashboardData();
+    
+    // Set up auto-refresh for dashboard
+    appState.autoRefreshInterval = setInterval(() => {
+      loadDashboardData(true); // Silent refresh
+    }, appState.refreshIntervalMs);
+  }
+}
+
+// Dashboard Functions
+async function loadDashboardData(silent = false) {
+  if (!silent) {
+    showLoadingOverlay();
+  }
+  
+  try {
+    if (!window.electronAPI || !window.electronAPI.fetchMultipleCryptos) {
+      throw new Error('Multiple crypto API not available');
+    }
+
+    const cryptosData = await window.electronAPI.fetchMultipleCryptos(appState.dashboardCryptos);
+    
+    if (!cryptosData || !Array.isArray(cryptosData)) {
+      throw new Error('No dashboard data received from API');
+    }
+
+    renderDashboard(cryptosData);
+    
+    if (!silent) {
+      console.log('Dashboard refreshed with', cryptosData.length, 'cryptocurrencies');
+    }
+
+  } catch (error) {
+    console.error('Dashboard loading failed:', error);
+    if (!silent) {
+      showError(`Failed to load dashboard: ${error.message}`);
+    }
+  } finally {
+    if (!silent) {
+      hideLoadingOverlay();
+    }
+  }
+}
+
+function renderDashboard(cryptosData) {
+  const grid = appState.domElements.cryptoGrid;
+  grid.innerHTML = '';
+
+  cryptosData.forEach(crypto => {
+    const card = createCryptoCard(crypto);
+    grid.appendChild(card);
+  });
+}
+
+function createCryptoCard(crypto) {
+  const card = document.createElement('div');
+  card.className = 'crypto-card';
+  card.onclick = () => {
+    // Switch to single view with this crypto
+    appState.currentCrypto = crypto.id;
+    switchView('single');
+    reloadData();
+    // Update the selector
+    appState.domElements.cryptoSelector.value = crypto.id;
+  };
+
+  const isPositive = crypto.priceChange >= 0;
+  const priceChangeClass = isPositive ? 'positive' : 'negative';
+
+  card.innerHTML = `
+    <div class="crypto-card-header">
+      <img class="crypto-card-icon" src="${crypto.image}" alt="${crypto.name}" onerror="this.src='assets/default-crypto.png'">
+      <div class="crypto-card-info">
+        <div class="crypto-card-name">${crypto.name}</div>
+        <div class="crypto-card-symbol">${crypto.symbol}</div>
+      </div>
+    </div>
+    <div class="crypto-card-price">$${crypto.currentPrice.toLocaleString()}</div>
+    <div class="crypto-card-change ${priceChangeClass}">
+      ${isPositive ? '+' : ''}${crypto.priceChange.toFixed(2)}%
+    </div>
+    <div class="crypto-card-stats">
+      <div class="crypto-card-stat">
+        <div class="crypto-card-stat-label">Market Cap</div>
+        <div class="crypto-card-stat-value">$${formatLargeNumber(crypto.marketCap)}</div>
+      </div>
+      <div class="crypto-card-stat">
+        <div class="crypto-card-stat-label">Volume</div>
+        <div class="crypto-card-stat-value">$${formatLargeNumber(crypto.totalVolume)}</div>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+function formatLargeNumber(num) {
+  if (num >= 1e12) {
+    return (num / 1e12).toFixed(1) + 'T';
+  } else if (num >= 1e9) {
+    return (num / 1e9).toFixed(1) + 'B';
+  } else if (num >= 1e6) {
+    return (num / 1e6).toFixed(1) + 'M';
+  } else {
+    return num.toLocaleString();
+  }
+}
+
+// Cleanup function for when the app is closed
+function cleanup() {
+  if (appState.autoRefreshInterval) {
+    clearInterval(appState.autoRefreshInterval);
+    appState.autoRefreshInterval = null;
+  }
+  
+  if (appState.currentChart) {
+    appState.currentChart.destroy();
+    appState.currentChart = null;
+  }
+}
+
+// Add cleanup on beforeunload
+window.addEventListener('beforeunload', cleanup);
 
 // Start the application
 document.addEventListener('DOMContentLoaded', initializeApplication);

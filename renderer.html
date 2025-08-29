@@ -52,41 +52,68 @@
   <div id="app-container" style="display: none;">
     <header class="header">
       <h1 class="app-title">BlockPulse</h1>
-      <div class="crypto-selector">
-        <select id="crypto-selector">
-          <option value="bitcoin">Bitcoin (BTC)</option>
-          <option value="ethereum">Ethereum (ETH)</option>
-          <option value="cardano">Cardano (ADA)</option>
-          <option value="solana">Solana (SOL)</option>
-          <option value="ripple">XRP (XRP)</option>
-        </select>
+      <div class="header-controls">
+        <div class="view-toggle">
+          <button id="single-view-btn" class="view-btn active">Single</button>
+          <button id="dashboard-view-btn" class="view-btn">Dashboard</button>
+        </div>
+        <div class="crypto-selector">
+          <select id="crypto-selector">
+            <option value="bitcoin">Bitcoin (BTC)</option>
+            <option value="ethereum">Ethereum (ETH)</option>
+            <option value="cardano">Cardano (ADA)</option>
+            <option value="solana">Solana (SOL)</option>
+            <option value="ripple">XRP (XRP)</option>
+            <option value="litecoin">Litecoin (LTC)</option>
+            <option value="chainlink">Chainlink (LINK)</option>
+            <option value="polkadot">Polkadot (DOT)</option>
+            <option value="avalanche-2">Avalanche (AVAX)</option>
+            <option value="polygon">Polygon (MATIC)</option>
+            <option value="uniswap">Uniswap (UNI)</option>
+            <option value="dogecoin">Dogecoin (DOGE)</option>
+          </select>
+        </div>
       </div>
     </header>
 
-    <div class="controls">
-      <div class="price-display">
-        <div class="crypto-info">
-          <img id="crypto-icon" class="crypto-icon" src="" alt="">
-          <span id="crypto-name" class="crypto-name"></span>
-          <span id="current-price" class="current-price">$--.--</span>
-          <span id="price-change" class="price-change">+0.00%</span>
+    <!-- Single Crypto View -->
+    <div id="single-view" class="view-content">
+      <div class="controls">
+        <div class="price-display">
+          <div class="crypto-info">
+            <img id="crypto-icon" class="crypto-icon" src="" alt="">
+            <span id="crypto-name" class="crypto-name"></span>
+            <span id="current-price" class="current-price">$--.--</span>
+            <span id="price-change" class="price-change">+0.00%</span>
+          </div>
+        </div>
+
+        <div class="timeframe-tabs">
+          <button class="timeframe-tab" data-timeframe="1h">1H</button>
+          <button class="timeframe-tab" data-timeframe="24h">24H</button>
+          <button class="timeframe-tab active" data-timeframe="7d">7D</button>
+          <button class="timeframe-tab" data-timeframe="30d">30D</button>
+          <button class="timeframe-tab" data-timeframe="90d">90D</button>
+          <button class="timeframe-tab" data-timeframe="ytd">YTD</button>
+          <button class="timeframe-tab" data-timeframe="1y">1Y</button>
+          <button class="timeframe-tab" data-timeframe="all">ALL</button>
         </div>
       </div>
 
-      <div class="timeframe-tabs">
-        <button class="timeframe-tab" data-timeframe="1h">1H</button>
-        <button class="timeframe-tab" data-timeframe="24h">24H</button>
-        <button class="timeframe-tab active" data-timeframe="7d">7D</button>
-        <button class="timeframe-tab" data-timeframe="30d">30D</button>
-        <button class="timeframe-tab" data-timeframe="90d">90D</button>
-        <button class="timeframe-tab" data-timeframe="ytd">YTD</button>
-        <button class="timeframe-tab" data-timeframe="1y">1Y</button>
-        <button class="timeframe-tab" data-timeframe="all">ALL</button>
+      <div class="chart-container">
+        <canvas id="price-chart"></canvas>
       </div>
     </div>
 
-    <div class="chart-container">
-      <canvas id="price-chart"></canvas>
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="view-content" style="display: none;">
+      <div class="dashboard-header">
+        <h2>Market Dashboard</h2>
+        <button id="refresh-dashboard" class="refresh-btn">Refresh</button>
+      </div>
+      <div id="crypto-grid" class="crypto-grid">
+        <!-- Crypto cards will be dynamically generated here -->
+      </div>
     </div>
   </div>
 
